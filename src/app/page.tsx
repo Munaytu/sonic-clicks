@@ -7,6 +7,7 @@ import { WalletButton } from '@/components/WalletButton';
 import { Stats } from '@/components/Stats';
 import { Leaderboard } from '@/components/Leaderboard';
 import { PersonalizedBadge } from '@/components/PersonalizedBadge';
+import { UserRank } from '@/components/UserRank';
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Gem } from 'lucide-react';
@@ -16,21 +17,25 @@ export default function Home() {
   const [localClicks, setLocalClicks] = useState(0);
   const [totalClaimed, setTotalClaimed] = useState(0);
   const [walletBalance, setWalletBalance] = useState(0); // Mock balance
+  const [userRank, setUserRank] = useState<number | null>(null);
 
   const fetchUserData = useCallback(async () => {
     if (!address) return;
 
     try {
-      const [pendingRes, claimedRes] = await Promise.all([
+      const [pendingRes, claimedRes, rankRes] = await Promise.all([
         fetch(`/api/pending-clicks?wallet=${address}`),
         fetch(`/api/claimed?wallet=${address}`),
+        fetch(`/api/user-rank?wallet=${address}`),
       ]);
       const pendingData = await pendingRes.json();
       const claimedData = await claimedRes.json();
+      const rankData = await rankRes.json();
       
       setLocalClicks(pendingData.clicks || 0);
       setTotalClaimed(claimedData.claimed || 0);
       setWalletBalance(Math.random() * 1); // Mock wallet token balance
+      setUserRank(rankData.rank || null);
     } catch (error) {
       console.error("Failed to fetch user data", error);
     }
@@ -43,6 +48,7 @@ export default function Home() {
       setLocalClicks(0);
       setTotalClaimed(0);
       setWalletBalance(0);
+      setUserRank(null);
     }
   }, [isConnected, address, fetchUserData]);
 
@@ -106,6 +112,7 @@ export default function Home() {
 
         {isConnected && (
           <aside className="w-full md:w-80 lg:w-96 flex-shrink-0 space-y-8">
+            {userRank !== null && <UserRank rank={userRank} />}
             <Leaderboard />
             <PersonalizedBadge clickCount={localClicks + totalClaimed} />
           </aside>
