@@ -1,9 +1,10 @@
 'use client';
 
 import { useAccount, useConnect, useDisconnect } from 'wagmi';
-import { injected } from 'wagmi/connectors';
 import { Button } from '@/components/ui/button';
 import { LogIn, LogOut } from 'lucide-react';
+import { injected } from 'wagmi/connectors';
+
 
 export function WalletButton() {
   const { address, isConnected } = useAccount();
