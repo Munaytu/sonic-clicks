@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/db';
-import { redis } from '@/lib/db';
+import { redis } from '@/lib/redis';
 import IPinfoWrapper from 'node-ipinfo';
 
 const ipinfo = new IPinfoWrapper(process.env.IPINFO_TOKEN);

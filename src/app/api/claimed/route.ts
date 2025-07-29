@@ -1,4 +1,4 @@
-import { redis } from '@/lib/db';
+import { redis } from '@/lib/redis';
 import { type NextRequest } from 'next/server';
 
 export const dynamic = 'force-dynamic'; // Force dynamic rendering
