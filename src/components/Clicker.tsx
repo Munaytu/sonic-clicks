@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
 
 interface ClickerProps {
   onClick: () => void;
@@ -41,15 +40,11 @@ export function Clicker({ onClick, disabled }: ClickerProps) {
       <div className="absolute inset-0 bg-primary/20 rounded-full animate-pulse opacity-50"></div>
       <div className="absolute inset-2 bg-primary/30 rounded-full animate-pulse delay-100 opacity-50"></div>
       
-      <Image 
-        src={isPressed ? "https://placehold.co/256x256.png" : "https://placehold.co/256x256.png"} 
-        data-ai-hint={isPressed ? "cat surprised" : "cat mascot"}
-        alt="Click me!" 
-        width={256} 
-        height={256}
-        className="z-10 drop-shadow-2xl"
-        priority
-      />
+      {/* Removed Sketchfab embed and added a simple div for animation */}
+      <div className={`w-full h-full rounded-full bg-blue-500 flex items-center justify-center text-white text-2xl font-bold ${isPressed ? 'scale-95' : 'scale-100'} transition-transform duration-100`}>
+        CLICK ME
+      </div>
+
       {disabled && (
         <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center z-20">
             <p className="text-white font-bold">Connect Wallet to Play</p>
