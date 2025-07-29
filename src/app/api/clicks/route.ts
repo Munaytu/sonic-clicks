@@ -16,10 +16,21 @@ export async function POST(req: NextRequest) {
     }
 
     const ip = req.headers.get('x-forwarded-for') || req.ip;
+    console.log('Incoming IP:', ip);
     let country = null;
     if (ip) {
-      const response = await ipinfo.lookupIp(ip);
-      country = response.country;
+      try {
+        console.log('Attempting IP lookup for:', ip);
+        const response = await ipinfo.lookupIp(ip);
+        country = response.country;
+        console.log('IPinfo response:', response);
+        console.log('Detected country:', country);
+      } catch (ipinfoError) {
+        console.error('Error looking up IP with IPinfo:', ipinfoError);
+        if (ipinfoError.response) {
+          console.error('IPinfo API error response data:', ipinfoError.response.data);
+        }
+      }
     }
 
     const { error } = await supabase.from('clicks').insert([
@@ -45,14 +56,16 @@ export async function POST(req: NextRequest) {
     }
 
     if (userData) {
+      console.log(`Updating existing user ${wallet} with country ${country} and clicks ${userData.total_clicks + clicksToAdd}`);
       const { error: updateUserError } = await supabase
         .from('users')
-        .update({ total_clicks: userData.total_clicks + clicksToAdd })
+        .update({ total_clicks: userData.total_clicks + clicksToAdd, country: country }) // Update country here
         .eq('wallet_address', wallet);
       if (updateUserError) {
         console.error('Error updating user in Supabase:', updateUserError);
       }
     } else {
+      console.log(`Inserting new user ${wallet} with country ${country} and clicks ${clicksToAdd}`);
       const { error: insertUserError } = await supabase
         .from('users')
         .insert([{ wallet_address: wallet, total_clicks: clicksToAdd, country: country }]);

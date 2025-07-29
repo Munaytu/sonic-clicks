@@ -15,6 +15,8 @@ async function getTopClickersByCountry(): Promise<{ [country: string]: any[] }> 
     return {};
   }
 
+  console.log('Fetched users for leaderboard:', data);
+
   const topClickersByCountry: { [country: string]: any[] } = {};
 
   for (const user of data) {
