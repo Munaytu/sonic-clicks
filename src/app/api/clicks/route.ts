@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/db';
 import { redis } from '@/lib/redis';
-// import IPinfoWrapper from 'node-ipinfo';
+import IPinfoWrapper from 'node-ipinfo';
 
-// const ipinfo = new IPinfoWrapper(process.env.IPINFO_TOKEN);
+const ipinfo = new IPinfoWrapper(process.env.IPINFO_TOKEN);
 
 export async function POST(req: NextRequest) {
   try {
@@ -18,20 +18,20 @@ export async function POST(req: NextRequest) {
     const ip = req.headers.get('x-forwarded-for') || req.ip;
     console.log('Incoming IP:', ip);
     let country = null;
-    // if (ip) {
-    //   try {
-    //     console.log('Attempting IP lookup for:', ip);
-    //     const response = await ipinfo.lookupIp(ip);
-    //     country = response.country;
-    //     console.log('IPinfo response:', response);
-    //     console.log('Detected country:', country);
-    //   } catch (ipinfoError) {
-    //     console.error('Error looking up IP with IPinfo:', ipinfoError);
-    //     if (ipinfoError.response) {
-    //       console.error('IPinfo API error response data:', ipinfoError.response.data);
-    //     }
-    //   }
-    // }
+    if (ip) {
+      try {
+        console.log('Attempting IP lookup for:', ip);
+        const response = await ipinfo.lookupIp(ip);
+        country = response.country;
+        console.log('IPinfo response:', response);
+        console.log('Detected country:', country);
+      } catch (ipinfoError) {
+        console.error('Error looking up IP with IPinfo:', ipinfoError);
+        if (ipinfoError.response) {
+          console.error('IPinfo API error response data:', ipinfoError.response.data);
+        }
+      }
+    }
 
     const { error } = await supabase.from('clicks').insert([
       { wallet_address: wallet, country: country },
