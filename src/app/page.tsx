@@ -6,7 +6,7 @@ import { Clicker } from '@/components/Clicker';
 import { WalletButton } from '@/components/WalletButton';
 import { Stats } from '@/components/Stats';
 import { Leaderboard } from '@/components/Leaderboard';
-import { PersonalizedBadge } from '@/components/PersonalizedBadge';
+
 import { UserRank } from '@/components/UserRank';
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -115,7 +115,7 @@ export default function Home() {
           <aside className="w-full md:w-80 lg:w-96 flex-shrink-0 space-y-8">
             {userRank !== null && <UserRank rank={userRank} />}
             <Leaderboard />
-            <PersonalizedBadge clickCount={localClicks + totalClaimed} />
+            
           </aside>
         )}
       </main>

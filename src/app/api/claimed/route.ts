@@ -5,5 +5,6 @@ export const dynamic = 'force-dynamic'; // Force dynamic rendering
 
 export async function GET(req: NextRequest) {
   const totalClicks = await redis.get('total_clicks') || 0;
+  console.log('claimed/route.ts: totalClicks', totalClicks);
   return Response.json({ claimed: totalClicks });
 }
