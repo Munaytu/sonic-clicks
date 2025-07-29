@@ -1,26 +1,67 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { supabase } from '@/lib/db';
+import { redis } from '@/lib/db';
+import IPinfoWrapper from 'node-ipinfo';
 
-// TODO: Implement persistent storage (e.g., using a database) instead of in-memory storage.
-let totalClicks = 0;
+const ipinfo = new IPinfoWrapper(process.env.IPINFO_TOKEN);
 
 export async function POST(req: NextRequest) {
   try {
     const data = await req.json();
-    
-    // Handle both individual clicks (from original click.ts) and accumulated clicks (from original clicks.ts)
-    const clicksToAdd = data.clicks || 1; // Assume 1 click if 'clicks' is not provided
-    const wallet = data.wallet; // From original click.ts
+    const clicksToAdd = data.clicks || 1;
+    const wallet = data.wallet;
 
-    if (typeof clicksToAdd !== 'number' || clicksToAdd <= 0) {
+    if (typeof clicksToAdd !== 'number' || clicksToAdd <= 0 || !wallet) {
       return NextResponse.json({ error: 'Invalid click data' }, { status: 400 });
     }
 
-    // TODO: Implement database logic to store clicks and associate with a wallet if necessary.
-    totalClicks += clicksToAdd;
+    const ip = req.headers.get('x-forwarded-for') || req.ip;
+    let country = null;
+    if (ip) {
+      const response = await ipinfo.lookupIp(ip);
+      country = response.country;
+    }
 
-    console.log(`Received ${clicksToAdd} clicks. Total clicks: ${totalClicks}`);
+    const { error } = await supabase.from('clicks').insert([
+      { wallet_address: wallet, country: country },
+    ]);
 
-    return NextResponse.json({ success: true, totalClicks });
+    if (error) {
+      console.error('Error inserting click into Supabase:', error);
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    }
+
+    await redis.incrby('total_clicks', clicksToAdd);
+
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('total_clicks')
+      .eq('wallet_address', wallet)
+      .single();
+
+    if (userError && userError.code !== 'PGRST116') { // Ignore 'not found' error
+      console.error('Error fetching user from Supabase:', userError);
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    }
+
+    if (userData) {
+      const { error: updateUserError } = await supabase
+        .from('users')
+        .update({ total_clicks: userData.total_clicks + clicksToAdd })
+        .eq('wallet_address', wallet);
+      if (updateUserError) {
+        console.error('Error updating user in Supabase:', updateUserError);
+      }
+    } else {
+      const { error: insertUserError } = await supabase
+        .from('users')
+        .insert([{ wallet_address: wallet, total_clicks: clicksToAdd, country: country }]);
+      if (insertUserError) {
+        console.error('Error inserting user into Supabase:', insertUserError);
+      }
+    }
+
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error processing click data:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -29,7 +70,7 @@ export async function POST(req: NextRequest) {
 
 export async function GET() {
   try {
-    // TODO: Implement database logic to fetch total clicks.
+    const totalClicks = await redis.get('total_clicks') || 0;
     return NextResponse.json({ totalClicks });
   } catch (error) {
     console.error('Error fetching total clicks:', error);

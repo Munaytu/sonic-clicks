@@ -1,8 +1,9 @@
+import { redis } from '@/lib/db';
 import { type NextRequest } from 'next/server';
 
+export const dynamic = 'force-dynamic'; // Force dynamic rendering
+
 export async function GET(req: NextRequest) {
-  // In a real app, you would fetch this from Redis or your database
-  const clicks = Math.floor(Math.random() * 1000);
-  
-  return Response.json({ clicks });
+  const totalClicks = await redis.get('total_clicks') || 0;
+  return Response.json({ clicks: totalClicks });
 }

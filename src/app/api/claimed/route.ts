@@ -1,8 +1,9 @@
+import { redis } from '@/lib/db';
 import { type NextRequest } from 'next/server';
 
+export const dynamic = 'force-dynamic'; // Force dynamic rendering
+
 export async function GET(req: NextRequest) {
-  // In a real app, you would fetch this from your main database (e.g., Supabase)
-  const claimed = Math.floor(Math.random() * 50000) + 1000;
-  
-  return Response.json({ claimed });
+  const totalClicks = await redis.get('total_clicks') || 0;
+  return Response.json({ claimed: totalClicks });
 }

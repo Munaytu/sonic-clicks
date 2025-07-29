@@ -62,15 +62,16 @@ export default function Home() {
     if (!address) return;
     // Fire-and-forget request to the backend
     try {
-      navigator.sendBeacon('/api/click', JSON.stringify({ wallet: address }));
+      navigator.sendBeacon('/api/clicks', JSON.stringify({ wallet: address }));
+      fetchUserData(); // Refresh data immediately after sending beacon
     } catch (error) {
        // Fallback for environments where sendBeacon is not supported
-       fetch('/api/click', {
+       fetch('/api/clicks', {
         method: 'POST',
         body: JSON.stringify({ wallet: address }),
         keepalive: true,
         headers: { 'Content-Type': 'application/json' }
-      }).catch(err => console.error("Fallback click tracking failed:", err));
+      }).then(() => fetchUserData()).catch(err => console.error("Fallback click tracking failed:", err));
     }
   };
 
